@@ -1,0 +1,9 @@
+[submodule "source/kahiin"]
+	path = source/kahiin
+	url = https://github.com/kahiin-project/kahiin
+[submodule "source/kahiin-db"]
+	path = source/kahiin-db
+	url = https://github.com/kahiin-project/kahiin-db
+[submodule "source/kahiin-app"]
+	path = source/kahiin-app
+	url = https://github.com/kahiin-project/kahiin-app
