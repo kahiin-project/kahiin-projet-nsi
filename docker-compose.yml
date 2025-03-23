@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  kahiin-db:
+    image: mysql:8.0
+    container_name: kahiin-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-kahiin}
+      MYSQL_USER: ${DB_USER:-kahiin}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-kahiin}
+    volumes:
+      - kahiin-db-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - kahiin-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  kahiin-server:
+    image: python:3.9-slim
+    container_name: kahiin-server
+    restart: unless-stopped
+    depends_on:
+      kahiin-db:
+        condition: service_healthy
+    volumes:
+      - ./kahiin:/app
+    working_dir: /app
+    command: >
+      bash -c "pip install -r requirements.txt &&
+              python app.py"
+    environment:
+      DB_HOST: kahiin-db
+      DB_USER: ${DB_USER:-kahiin}
+      DB_PASSWORD: ${DB_PASSWORD:-kahiin}
+      DB_NAME: ${DB_NAME:-kahiin}
+    ports:
+      - "5000:5000"
+    networks:
+      - kahiin-network
+
+volumes:
+  kahiin-db-data:
+
+networks:
+  kahiin-network:
+    driver: bridge
