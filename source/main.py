@@ -341,11 +341,18 @@ def docker_up():
                 print("Fichier de configuration Docker créé à partir des paramètres existants.")
             else:
                 with open(docker_env_path, 'w') as f:
-                    f.write("DB_NAME=kahiin\n")
-                    f.write("DB_USER=kahiin\n")
-                    f.write("DB_PASSWORD=kahiin\n")
-                    f.write("DB_HOST=kahiin-db\n")
-                    f.write("DB_ROOT_PASSWORD=rootpassword\n")
+
+                    f.write(f"DB_NAME={input("Le nom de la base de données : ")}\n")
+                    f.write(f"DB_USER={input("Le nom d'utilisateur de la base de données : ")}\n")
+                    f.write(f"DB_PASSWORD={getpass.getpass('Le mot de passe de la base de données : ')}\n")
+                    f.write(f"DB_HOST={input('L\'hôte de la base de données [localhost] : ')}\n")
+                    f.write(f"DB_ROOT_PASSWORD={getpass.getpass('Le mot de passe root de la base de données : ')}\n")
+                    f.write(f"EMAIL={input('Adresse email pour les verifications : ')}\n")
+                    f.write(f"EMAIL_PASSWORD={getpass.getpass('Le mot de passe de l\'adresse email : ')}\n")
+                    f.write(f"SMTP_SERVER={input('Serveur SMTP : ')}\n")
+                    f.write(f"SMTP_PORT={input('Port SMTP [587] : ')}\n")
+                    f.write(f"ENCRYPTION_KEY={getpass.getpass('Clé de chiffrement (au moins 16 caractères) : ')}\n")
+                    
                 print("Fichier de configuration Docker créé avec des paramètres par défaut.")
         except Exception as e:
             print(f"\033[91mErreur lors de la création du fichier .env: {e}\033[0m")
