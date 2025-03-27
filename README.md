@@ -26,7 +26,7 @@ Kahiin-projet-nsi est un projet open-source conçu pour les classes, permettant 
 
 
 ## Utilisation
-Une fois l'application démarrée, vous pouvez y accéder à `http://localhost:5000`.
+Une fois l'application démarrée, vous pouvez y accéder à `http://localhost:8080`.
 
 ### Création de Quiz
 1. Connectez-vous à l'application.
