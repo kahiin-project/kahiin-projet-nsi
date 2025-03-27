@@ -6,9 +6,13 @@ import threading
 import time
 import signal
 import getpass
+import socket
+
+# Change le répertoire de travail
+os.chdir("..")
 
 # Chemins des dossiers
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.join(os.getcwd(), "source"))
 DB_DIR = os.path.join(BASE_DIR, "kahiin-db")
 APP_DIR = os.path.join(BASE_DIR, "kahiin-app")
 SERVER_DIR = os.path.join(BASE_DIR, "kahiin")
@@ -16,6 +20,8 @@ SERVER_DIR = os.path.join(BASE_DIR, "kahiin")
 # Variables globales
 running_processes = []
 db_initialized = False
+
+
 
 LOGO = """
 ██╗  ██╗ █████╗ ██╗  ██╗██╗██╗███╗   ██╗
@@ -138,7 +144,8 @@ def start_server():
     sudo_password = getpass.getpass("Mot de passe sudo: ")
     
     print("\nDémarrage du serveur Kahiin...")
-    print("Le serveur sera accessible à l'adresse : http://localhost:5000")
+    local_ip = get_local_ip()
+    print(f"Le serveur sera accessible à l'adresse : http://{local_ip}:8080")
     print("Le processus s'exécute en arrière-plan. Vous pouvez continuer à utiliser le menu.\n")
     
     # Modification de la commande pour passer le mot de passe à sudo via -S
@@ -316,6 +323,16 @@ def drop_db():
     
     input("\nAppuyez sur Entrée pour continuer...")
 
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(('10.254.254.254', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
 def docker_up():
     """Démarre les conteneurs Docker pour Kahiin"""
     clear_screen()
@@ -331,22 +348,23 @@ def docker_up():
     
     # Créer le fichier .env pour docker-compose s'il n'existe pas
     docker_env_path = os.path.join(BASE_DIR, '.env')
-    if not os.path.exists(docker_env_path) and db_initialized:
+    if not os.path.exists(docker_env_path) and not db_initialized:
         try:
             db_env_path = os.path.join(DB_DIR, '.env')
             if os.path.exists(db_env_path):
-                with open(db_env_path, 'r') as src, open(docker_env_path, 'w') as dest:
-                    dest.write(src.read())
-                    dest.write("DB_ROOT_PASSWORD=rootpassword\n")
-                print("Fichier de configuration Docker créé à partir des paramètres existants.")
+                with open(db_env_path, 'r') as f:
+                    db_env_content = f.read()
+                
+                with open(docker_env_path, 'w') as f:
+                    f.wradite(db_env_content)
             else:
                 with open(docker_env_path, 'w') as f:
-
+                    
                     f.write(f"DB_NAME={input("Le nom de la base de données : ")}\n")
                     f.write(f"DB_USER={input("Le nom d'utilisateur de la base de données : ")}\n")
                     f.write(f"DB_PASSWORD={getpass.getpass('Le mot de passe de la base de données : ')}\n")
                     f.write(f"DB_HOST={input('L\'hôte de la base de données [localhost] : ')}\n")
-                    f.write(f"DB_ROOT_PASSWORD={getpass.getpass('Le mot de passe root de la base de données : ')}\n")
+                    f.write(f"MYSQL_ROOT_PASSWORD={getpass.getpass('Le mot de passe root de la base de données : ')}\n")
                     f.write(f"EMAIL={input('Adresse email pour les verifications : ')}\n")
                     f.write(f"EMAIL_PASSWORD={getpass.getpass('Le mot de passe de l\'adresse email : ')}\n")
                     f.write(f"SMTP_SERVER={input('Serveur SMTP : ')}\n")
@@ -358,8 +376,10 @@ def docker_up():
             print(f"\033[91mErreur lors de la création du fichier .env: {e}\033[0m")
     
     print("Démarrage des conteneurs Docker...")
-    run_process("docker-compose -f docker-compose.yml up -d", BASE_DIR, "Docker Compose")
-    print("\nKahiin est accessible à l'adresse : http://localhost:5000")
+    run_process(f"pkexec docker-compose -f {os.path.join(os.getcwd(), 'docker-compose.yml')} up -d", BASE_DIR, "Docker Compose")
+    # get local ip
+    local_ip = get_local_ip()
+    print(f"\nKahiin est accessible à l'adresse : http://{local_ip}:8080")
     input("\nAppuyez sur Entrée pour continuer...")
 
 def docker_down():
@@ -375,7 +395,7 @@ def docker_down():
         return
     
     print("Arrêt des conteneurs Docker...")
-    os.system(f"cd {BASE_DIR} && docker-compose -f docker-compose.yml down")
+    os.system(f"cd {BASE_DIR} && pkexec docker-compose -f {os.path.join(os.getcwd(), 'docker-compose.yml')} down > /dev/zero")
     print("Les conteneurs Docker ont été arrêtés.")
     input("\nAppuyez sur Entrée pour continuer...")
 
@@ -392,7 +412,7 @@ def docker_status():
         return
     
     print("Conteneurs Docker actuellement en cours d'exécution:")
-    os.system("docker ps --filter name=kahiin")
+    os.system("pkexec docker ps --filter name=kahiin")
     input("\nAppuyez sur Entrée pour continuer...")
 
 def check_docker():
