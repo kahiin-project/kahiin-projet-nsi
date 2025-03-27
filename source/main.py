@@ -376,7 +376,7 @@ def docker_up():
             print(f"\033[91mErreur lors de la création du fichier .env: {e}\033[0m")
     
     print("Démarrage des conteneurs Docker...")
-    run_process(f"pkexec docker-compose -f {os.path.join(os.getcwd(), 'docker-compose.yml')} up -d", BASE_DIR, "Docker Compose")
+    run_process(f"pkexec docker-compose -f {os.path.join(os.getcwd(), 'docker-compose.yml')} up -d > /dev/zero", BASE_DIR, "Docker Compose")
     # get local ip
     local_ip = get_local_ip()
     print(f"\nKahiin est accessible à l'adresse : http://{local_ip}:8080")
