@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 import os
 import sys
 import subprocess
@@ -8,16 +8,16 @@ import signal
 import getpass
 import socket
 
-# Change le répertoire de travail
+
 os.chdir("..")
 
-# Chemins des dossiers
+
 BASE_DIR = os.path.dirname(os.path.join(os.getcwd(), "source"))
 DB_DIR = os.path.join(BASE_DIR, "kahiin-db")
 APP_DIR = os.path.join(BASE_DIR, "kahiin-app")
 SERVER_DIR = os.path.join(BASE_DIR, "kahiin")
 
-# Variables globales
+
 running_processes = []
 db_initialized = False
 
@@ -85,7 +85,7 @@ def run_process(command, cwd, name=None):
     process_info = (process, name)
     running_processes.append(process_info)
     
-    # Démarrer les threads pour gérer stdout et stderr
+    
     threading.Thread(target=print_output, args=(process.stdout, name, False), daemon=True).start()
     threading.Thread(target=print_output, args=(process.stderr, name, True), daemon=True).start()
     
@@ -148,7 +148,7 @@ def start_server():
     print(f"Le serveur sera accessible à l'adresse : http://{local_ip}:8080")
     print("Le processus s'exécute en arrière-plan. Vous pouvez continuer à utiliser le menu.\n")
     
-    # Modification de la commande pour passer le mot de passe à sudo via -S
+    
     process = subprocess.Popen(
         "echo '" + sudo_password + "' | sudo -S ./start.sh",
         cwd=SERVER_DIR,
@@ -163,7 +163,7 @@ def start_server():
     process_info = (process, "Serveur")
     running_processes.append(process_info)
     
-    # Démarrer les threads pour gérer stdout et stderr
+    
     threading.Thread(target=print_output, args=(process.stdout, "Serveur", False), daemon=True).start()
     threading.Thread(target=print_output, args=(process.stderr, "Serveur", True), daemon=True).start()
     
@@ -252,16 +252,16 @@ def init_db():
     if os.path.exists(os.path.join(DB_DIR, script_path)):
         full_path = os.path.join(DB_DIR, script_path)
         
-        if os.name != 'nt':  # Linux/Mac
+        if os.name != 'nt':  
             os.chmod(full_path, 0o755)
         
-        # Construire la commande
-        if os.name == 'nt':  # Windows
+        
+        if os.name == 'nt':  
             command = f"{script_path} {db_name} {db_user} {db_password} {db_host} {email} {email_password} {smtp_server} {smtp_port} {encryption_key} {root_password}"
-        else:  # Linux/Mac
+        else:  
             command = f"./{script_path} {db_name} {db_user} {db_password} {db_host} {email} {email_password} {smtp_server} {smtp_port} {encryption_key} {root_password}"
         
-        # Exécuter la commande
+        
         return_code = os.system(f"cd {DB_DIR} && {command}")
         
         if return_code == 0:
@@ -297,13 +297,13 @@ def drop_db():
     if os.path.exists(os.path.join(DB_DIR, script_path)):
         full_path = os.path.join(DB_DIR, script_path)
         
-        if os.name != 'nt':  # Linux/Mac
+        if os.name != 'nt':  
             os.chmod(full_path, 0o755)
         
-        # Construire et exécuter la commande
-        if os.name == 'nt':  # Windows
+        
+        if os.name == 'nt':  
             command = f"{script_path}"
-        else:  # Linux/Mac
+        else:  
             command = f"./{script_path}"
         
         print(f"\n\033[92mSuppression avec {os_script}...\033[0m")
@@ -311,7 +311,7 @@ def drop_db():
         
         if return_code == 0:
             print("\n\033[92mSuppression de la base de données terminée avec succès.\033[0m")
-            # Supprimer le fichier d'état
+            
             state_file = os.path.join(BASE_DIR, '.db_initialized')
             if os.path.exists(state_file):
                 os.remove(state_file)
@@ -346,7 +346,7 @@ def docker_up():
         input("\nAppuyez sur Entrée pour continuer...")
         return
     
-    # Créer le fichier .env pour docker-compose s'il n'existe pas
+    
     docker_env_path = os.path.join(BASE_DIR, '.env')
     if not os.path.exists(docker_env_path) and not db_initialized:
         try:
@@ -377,7 +377,7 @@ def docker_up():
     
     print("Démarrage des conteneurs Docker...")
     run_process(f"pkexec docker-compose -f {os.path.join(os.getcwd(), 'docker-compose.yml')} up -d > /dev/zero", BASE_DIR, "Docker Compose")
-    # get local ip
+    
     local_ip = get_local_ip()
     print(f"\nKahiin est accessible à l'adresse : http://{local_ip}:8080")
     input("\nAppuyez sur Entrée pour continuer...")
@@ -461,7 +461,7 @@ def show_main_menu():
 def simple_main():
     global db_initialized
     
-    # Vérifier si la base de données est déjà initialisée
+    
     is_db_initialized()
     
     while True:
